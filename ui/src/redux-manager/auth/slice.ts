@@ -26,5 +26,8 @@ export default createSlice({
       state.user = null;
       state.authorized = false;
     },
+    updateUser: (state, action: StoreAction<User>) => {
+      state.user = action.payload;
+    },
   },
 });

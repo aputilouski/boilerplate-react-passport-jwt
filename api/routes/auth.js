@@ -3,7 +3,7 @@ const router = express.Router();
 const yup = require('yup');
 const { validate } = require('../utils');
 const { User } = require('../models');
-// const { generateUserAccessToken, verifyUser } = require('../services/passport');
+const { strategies } = require('../config');
 
 const USERNAME = yup.string().min(4, 'Must be 4 characters or more').max(20, 'Must be 20 characters or less').required('Required');
 const PASSWORD = yup.string().min(8, 'Must be 8 characters or more').max(20, 'Must be 20 characters or less').required('Required');
@@ -35,37 +35,36 @@ router.post('/sign-in', validate(SignInSchema), async (req, res) => {
     if (!user) return res.status(403).json({ message: 'Incorrect credentials' });
 
     const passwordConfirmed = await user.confirmPassword(password);
-    if (!passwordConfirmed) return res.status(403).json({ message: 'Incorrect credentials' });
+    if (!passwordConfirmed) return res.status(403).json({ message: 'Incorrect username or password' });
 
-    res.json({ token: 'ok', user: user.getPublicAttributes() });
-    // res.json({ token: generateUserAccessToken(user), user: user.getPublicAttributes() });
+    res.cookie('refreshToken', strategies.generateRefreshToken(user), strategies.COOKIE_OPTIONS);
+    res.json({ token: strategies.generateAccessToken(user), user: user.getPublicAttributes() });
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message || 'An error occurred while logging in');
   }
 });
 
-// router.post('/user', verifyUser, async (req, res) => {
-//   try {
-//     const { name, username } = req.body;
+const UserUpdateSchema = yup.object({ body: yup.object({ username: USERNAME, name: NAME }) });
 
-//     const { error } = UserScheme.validate({ name, username });
-//     if (error?.details) return res.status(400).json({ message: error.details[0].message });
+router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
+  try {
+    const { name, username } = req.body;
 
-//     if (req.user.username !== username) {
-//       const user = await User.findOne({ where: { username } });
-//       if (user) return res.status(400).json({ message: 'User with the same username already exists' });
-//     }
+    if (req.user.username !== username) {
+      const user = await User.findOne({ where: { username } });
+      if (user) return res.status(400).json({ message: 'User with the same username already exists' });
+    }
 
-//     req.user.name = name;
-//     req.user.username = username;
-//     await req.user.save();
+    req.user.name = name;
+    req.user.username = username;
+    await req.user.save();
 
-//     res.json({ user: req.user.getPublicAttributes(), message: 'User information updated successfully' });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send(error.message || 'Some error occurred while updating the user');
-//   }
-// });
+    res.json({ user: req.user.getPublicAttributes(), message: 'User information updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message || 'Some error occurred while updating the user');
+  }
+});
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import authSlice from './slice';
 import api, { getErrorMessage, setAccessToken } from 'api';
-import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials } from './actions';
+import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials, USER_UPDATE } from './actions';
 import { StoreActionPromise } from '../store';
 import { replace } from 'connected-react-router';
 
@@ -35,23 +35,21 @@ function* signUpWorker(action: StoreActionPromise<SignUpCredentials>) {
   }
 }
 
-// function* userUpdateWorker(action: StoreActionPromise<User>) {
-//   yield put(authSlice.actions.runLoading());
-//   const { payload, resolve, reject } = action;
-//   try {
-//     const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(payload));
-//     yield put(authSlice.actions.setUser(response.data.user));
-//     resolve();
-//   } catch (error) {
-//     console.error(error);
-//     yield put(authSlice.actions.catchError(getErrorMessage(error)));
-//     reject();
-//   }
-// }
+function* userUpdateWorker(action: StoreActionPromise<User>) {
+  const { payload, resolve, reject } = action;
+  try {
+    const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(payload));
+    yield put(authSlice.actions.updateUser(response.data.user));
+    resolve();
+  } catch (error) {
+    console.error(error);
+    reject(getErrorMessage(error));
+  }
+}
 
 export default function* authWatcher() {
   yield takeEvery(SIGN_IN, signInWorker);
   yield takeEvery(SIGN_OUT, signOutWorker);
   yield takeEvery(SIGN_UP, signUpWorker);
-  // yield takeEvery(USER_UPDATE, userUpdateWorker);
+  yield takeEvery(USER_UPDATE, userUpdateWorker);
 }

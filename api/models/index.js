@@ -1,13 +1,13 @@
 require('pg').defaults.parseInt8 = true;
 const debug = require('debug')('api:database');
 const { Sequelize } = require('sequelize');
-const config = require('../config');
+const env = require('../config/env');
 
-const db = new Sequelize(config.postgres_db, config.postgres_user, config.postgres_user_password, {
-  host: config.postgres_host,
-  port: config.postgres_port,
+const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_password, {
+  host: env.postgres_host,
+  port: env.postgres_port,
   dialect: 'postgres',
-  logging: config.is_development ? str => debug(str) : false,
+  logging: env.is_development ? str => debug(str) : false,
   define: {
     timestamps: true,
     underscored: true,

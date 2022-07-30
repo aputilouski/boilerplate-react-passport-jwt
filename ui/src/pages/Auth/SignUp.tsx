@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { SignUpCredentials, signUp } from 'redux-manager';
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
@@ -7,13 +6,13 @@ import * as Yup from 'yup';
 type InitialValues = SignUpCredentials & { error: string };
 
 const SignUp = () => {
-  const onSubmit = React.useCallback((values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
+  const onSubmit = (values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
     const { username, name, password, confirmPassword } = values;
     console.log(values);
     signUp({ username, name, password, confirmPassword })
       .catch((error: string) => setErrors({ error }))
       .finally(() => setSubmitting(false));
-  }, []);
+  };
 
   return (
     <div className="w-screen h-screen flex">
