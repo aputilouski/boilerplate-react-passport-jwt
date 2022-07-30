@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { SignInCredentials, signIn } from 'redux-manager';
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
@@ -7,12 +6,12 @@ import * as Yup from 'yup';
 type InitialValues = SignInCredentials & { error: string };
 
 const SignIn = () => {
-  const onSubmit = React.useCallback((values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
+  const onSubmit = (values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
     const { username, password } = values;
     signIn({ username, password })
       .catch((error: string) => setErrors({ error }))
       .finally(() => setSubmitting(false));
-  }, []);
+  };
 
   return (
     <div className="w-screen h-screen flex">
@@ -25,12 +24,23 @@ const SignIn = () => {
         onSubmit={onSubmit}>
         {({ isSubmitting }) => (
           <Form className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
-            <h1 className="text-2xl mb-1.5">Login</h1>
+            <h1 className="text-2xl mb-1.5">Sign In</h1>
 
-            <Field name="username" className="border" autoComplete="username" />
+            <Field //
+              name="username"
+              placeholder="Username"
+              className="border"
+              autoComplete="username"
+            />
             <ErrorMessage name="username" component="div" className="text-sm" />
 
-            <Field name="password" type="password" className="border" autoComplete="current-password" />
+            <Field //
+              name="password"
+              placeholder="Password"
+              type="password"
+              className="border"
+              autoComplete="current-password"
+            />
             <ErrorMessage name="password" component="div" className="text-sm" />
 
             <ErrorMessage name="error" component="div" className="text-sm" />

@@ -1,6 +1,6 @@
 import { Route, Switch } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
-import { SignIn, MainPage } from 'pages';
+import { SignIn, SignUp, MainPage } from 'pages';
 import { Layout, AuthController } from 'components';
 import { Provider } from 'react-redux';
 import { store, history } from 'redux-manager';
@@ -10,7 +10,7 @@ const App = () => (
     <ConnectedRouter history={history}>
       <Switch>
         <Route exact path="/" component={SignIn} />
-        {/* <Route path="/register" component={Register} /> */}
+        <Route path="/sign-up" component={SignUp} />
         <Route>
           <AuthController>
             <Layout>

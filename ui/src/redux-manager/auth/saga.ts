@@ -1,14 +1,14 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
-import authSlice, { AuthSlice } from './slice';
+import authSlice from './slice';
 import api, { getErrorMessage, setAccessToken } from 'api';
-import { SIGN_IN, SignInCredentials } from './actions';
-import { RootState, StoreAction, StoreActionPromise } from '../store';
-import { replace, LOCATION_CHANGE } from 'connected-react-router';
+import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials } from './actions';
+import { StoreActionPromise } from '../store';
+import { replace } from 'connected-react-router';
 
 function* signInWorker(action: StoreActionPromise<SignInCredentials>) {
   const { payload, resolve, reject } = action;
   try {
-    const response: Awaited<ReturnType<typeof api.login>> = yield call(() => api.login(payload));
+    const response: Awaited<ReturnType<typeof api.signIn>> = yield call(() => api.signIn(payload));
     setAccessToken(response.data.token);
     yield put(authSlice.actions.login(response.data));
     resolve();
@@ -19,39 +19,21 @@ function* signInWorker(action: StoreActionPromise<SignInCredentials>) {
   }
 }
 
-// function* logoutWorker() {
-//   yield put(authSlice.actions.logout());
-// }
+function* signOutWorker() {
+  yield put(authSlice.actions.logout());
+}
 
-// function* resetWorker() {
-//   // const path: string = yield select(({ router }: RootState) => router.location.pathname);
-//   const location: string = yield select(({ router }: RootState) => router.location);
-//   console.log(location);
-//   // if (['/', '/register'].includes(path)) {
-//   //   const auth: AuthSlice = yield select((state: RootState) => state.auth);
-//   //   if (auth.error || auth.loading) yield put(authSlice.actions.reset());
-//   // }
-// }
-
-// function* registerWorker(action: StoreAction<RegistrationCredentials>) {
-//   yield put(authSlice.actions.runLoading());
-//   try {
-//     yield call(() => api.register(action.payload));
-//     yield put(replace('/'));
-//   } catch (error) {
-//     console.error(error);
-//     yield put(authSlice.actions.catchError(getErrorMessage(error)));
-//   }
-// }
-
-// function* checkUsernameWorker(action: StoreAction<string>) {
-//   try {
-//     const response: Awaited<ReturnType<typeof api.checkUsername>> = yield call(() => api.checkUsername(action.payload));
-//     yield put(authSlice.actions.setUserAvailable(response.data.available));
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
+function* signUpWorker(action: StoreActionPromise<SignUpCredentials>) {
+  const { payload, resolve, reject } = action;
+  try {
+    yield call(() => api.signUp(payload));
+    resolve();
+    yield put(replace('/'));
+  } catch (error) {
+    console.error(error);
+    reject(getErrorMessage(error));
+  }
+}
 
 // function* userUpdateWorker(action: StoreActionPromise<User>) {
 //   yield put(authSlice.actions.runLoading());
@@ -69,9 +51,7 @@ function* signInWorker(action: StoreActionPromise<SignInCredentials>) {
 
 export default function* authWatcher() {
   yield takeEvery(SIGN_IN, signInWorker);
-  // yield takeEvery(LOGOUT, logoutWorker);
-  // yield takeEvery(REGISTRATION, registerWorker);
-  // yield takeEvery(CHECK_USERNAME, checkUsernameWorker);
+  yield takeEvery(SIGN_OUT, signOutWorker);
+  yield takeEvery(SIGN_UP, signUpWorker);
   // yield takeEvery(USER_UPDATE, userUpdateWorker);
-  // yield takeLatest(LOCATION_CHANGE, resetWorker);
 }

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { SignInCredentials, signOut } from 'redux-manager';
+import { SignInCredentials, signOut, SignUpCredentials } from 'redux-manager';
 
 const DEFAULT_ERROR_MESSAGE = 'An unexpected problem has occurred, please try again later.';
 axios.interceptors.response.use(
@@ -21,16 +21,14 @@ axios.interceptors.response.use(
 );
 
 const endpoints = {
-  login: '/auth/login',
-  register: '/auth/register',
-  checkUsername: '/auth/check-username',
-  updateUser: '/auth/user',
+  signIn: '/auth/sign-in',
+  signUp: '/auth/sign-up',
+  // updateUser: '/auth/user',
 };
 
 const api = {
-  login: (credentials: SignInCredentials) => axios.post<{ token: string; user: User }>(endpoints.login, credentials),
-  // register: (credentials: SignUpCredentials) => axios.post(endpoints.register, credentials),
-  // checkUsername: (username: string) => axios.post<{ available: boolean }>(endpoints.checkUsername, { username }),
+  signIn: (credentials: SignInCredentials) => axios.post<{ token: string; user: User }>(endpoints.signIn, credentials),
+  signUp: (credentials: SignUpCredentials) => axios.post(endpoints.signUp, credentials),
   // updateUser: (userdata: User) => axios.post<{ user: User }>(endpoints.updateUser, userdata),
 };
 
