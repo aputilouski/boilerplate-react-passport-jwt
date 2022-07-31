@@ -17,9 +17,11 @@ const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_p
 });
 
 const User = require('./User')(db);
+const RefreshToken = require('./RefreshToken')(db);
 
 const models = {
   User,
+  RefreshToken,
 };
 
 Object.values(models).forEach(Model => {

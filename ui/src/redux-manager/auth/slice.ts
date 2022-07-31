@@ -29,5 +29,8 @@ export default createSlice({
     updateUser: (state, action: StoreAction<User>) => {
       state.user = action.payload;
     },
+    updateToken: (state, action: StoreAction<string>) => {
+      state.token = action.payload;
+    },
   },
 });

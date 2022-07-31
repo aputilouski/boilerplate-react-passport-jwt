@@ -45,7 +45,13 @@ const User = db => {
     return bcrypt.hash(str, salt);
   };
 
-  // Model.associate = ({ User, Room, Message }) => {};
+  Model.associate = ({ RefreshToken }) => {
+    Model.hasMany(RefreshToken, {
+      as: 'tokens',
+      onDelete: 'cascade',
+      foreignKey: { name: 'user_id', allowNull: false, unique: false },
+    });
+  };
   return Model;
 };
 

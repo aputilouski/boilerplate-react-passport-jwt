@@ -24,12 +24,14 @@ const endpoints = {
   signIn: '/auth/sign-in',
   signUp: '/auth/sign-up',
   updateUser: '/auth/user',
+  refreshToken: '/auth/refresh-token',
 };
 
 const api = {
   signIn: (credentials: SignInCredentials) => axios.post<{ token: string; user: User }>(endpoints.signIn, credentials),
   signUp: (credentials: SignUpCredentials) => axios.post(endpoints.signUp, credentials),
   updateUser: (data: UserData) => axios.post<{ user: User }>(endpoints.updateUser, data),
+  refreshToken: () => axios.post(endpoints.refreshToken),
 };
 
 export type ApiError = AxiosError<{ message?: string }>;

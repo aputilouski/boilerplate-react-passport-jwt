@@ -13,7 +13,7 @@ const options = {
 module.exports.useJwtStrategy = () => {
   passport.use(
     new JwtStrategy(options, async function (jwt_payload, done) {
-      User.findByPk(jwt_payload.uuid)
+      User.findByPk(jwt_payload.user_id)
         .then(user => {
           if (user) done(null, user);
           else done(null, false);
@@ -23,17 +23,17 @@ module.exports.useJwtStrategy = () => {
   );
 };
 
-module.exports.generateAccessToken = user => {
-  return jwt.sign({ uuid: user.uuid }, env.jwt_secret, {
+module.exports.generateAccessToken = user =>
+  jwt.sign({ user_id: user.uuid }, env.jwt_secret, {
     expiresIn: eval(env.session_expiry),
   });
-};
 
-module.exports.generateRefreshToken = user => {
-  return jwt.sign({ uuid: user.uuid }, env.refresh_token_secret, {
+module.exports.generateRefreshToken = user =>
+  jwt.sign({ user_id: user.uuid }, env.refresh_token_secret, {
     expiresIn: eval(env.refresh_token_expiry),
   });
-};
+
+module.exports.verifyRefreshToken = token => jwt.verify(token, env.refresh_token_secret);
 
 module.exports.COOKIE_OPTIONS = {
   httpOnly: true,
@@ -42,10 +42,5 @@ module.exports.COOKIE_OPTIONS = {
   maxAge: eval(env.refresh_token_expiry) * 1000,
   // sameSite: 'none',
 };
-
-// module.exports.getUserUuidByAccessToken = token => {
-//   const { uuid } = jwt.decode(token, jwt_secret);
-//   return uuid;
-// };
 
 module.exports.verifyUser = passport.authenticate('jwt', { session: false });
