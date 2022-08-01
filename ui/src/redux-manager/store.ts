@@ -19,11 +19,12 @@ export const history = createUniversalHistory();
 
 const sagaMiddleware = createSagaMiddleware();
 
+const reducer = {
+  router: connectRouter<Location>(history),
+  auth: authSlice.reducer,
+};
 export const store = configureStore({
-  reducer: {
-    router: connectRouter<Location>(history),
-    auth: authSlice.reducer,
-  },
+  reducer,
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({ thunk: false, serializableCheck: false }).concat(
       routerMiddleware(history), //
@@ -31,7 +32,14 @@ export const store = configureStore({
     ),
 });
 
-sagaMiddleware.run(rootSaga);
+let sagaTask = sagaMiddleware.run(rootSaga);
+if (module.hot) {
+  module.hot.accept('./rootSaga', () => {
+    const getNewRootSaga = require('./rootSaga');
+    sagaTask.cancel();
+    sagaTask = sagaMiddleware.run(getNewRootSaga);
+  });
+}
 
 export type RootState = ReturnType<typeof store.getState>;
 

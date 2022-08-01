@@ -23,6 +23,7 @@ axios.interceptors.response.use(
 const endpoints = {
   signIn: '/auth/sign-in',
   signUp: '/auth/sign-up',
+  signOut: '/auth/sign-out',
   updateUser: '/auth/user',
   refreshToken: '/auth/refresh-token',
 };
@@ -30,8 +31,9 @@ const endpoints = {
 const api = {
   signIn: (credentials: SignInCredentials) => axios.post<{ token: string; user: User }>(endpoints.signIn, credentials),
   signUp: (credentials: SignUpCredentials) => axios.post(endpoints.signUp, credentials),
+  signOut: () => axios.post(endpoints.signOut),
   updateUser: (data: UserData) => axios.post<{ user: User }>(endpoints.updateUser, data),
-  refreshToken: () => axios.post(endpoints.refreshToken),
+  refreshToken: () => axios.post<{ token: string }>(endpoints.refreshToken),
 };
 
 export type ApiError = AxiosError<{ message?: string }>;

@@ -4,7 +4,7 @@ export const SIGN_IN = 'AUTH/SIGN_IN';
 export const SIGN_OUT = 'AUTH/SIGN_OUT';
 export type SignInCredentials = { username: string; password: string };
 export const signIn = (payload: SignInCredentials) => new Promise((resolve, reject) => store.dispatch({ type: SIGN_IN, payload, resolve, reject }));
-export const signOut = () => store.dispatch({ type: SIGN_OUT });
+export const signOut = () => new Promise((resolve, reject) => store.dispatch({ type: SIGN_OUT, resolve, reject }));
 
 export const SIGN_UP = 'AUTH/SIGN_UP';
 export type SignUpCredentials = SignInCredentials & { name: string; confirmPassword: string };

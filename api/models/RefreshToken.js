@@ -18,6 +18,13 @@ const RefreshToken = db => {
     { updatedAt: false }
   );
 
+  Model.associate = ({ User }) => {
+    Model.belongsTo(User, {
+      as: 'user',
+      onDelete: 'cascade',
+      foreignKey: { name: 'user_id', allowNull: false, unique: false },
+    });
+  };
   return Model;
 };
 

@@ -67,21 +67,39 @@ router.post('/sign-in', validate(SignInSchema), async (req, res) => {
   }
 });
 
-router.post('/refresh-token', async (req, res) => {
-  try {
-    if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
+const refreshToken =
+  (withUser = false) =>
+  async (req, res) => {
+    try {
+      if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
+      const refreshToken = await RefreshToken.findByPk(req.signedCookies.refreshToken.uuid, { include: { model: User, as: 'user' } });
+      if (!refreshToken) return res.status(400).json({ message: 'No refresh token' });
+      await refreshToken.destroy();
+      if (req.signedCookies.refreshToken.token !== refreshToken.token) return res.status(400).json({ message: 'Bad token' });
+      // const payload = strategies.verifyRefreshToken(token);
+      const user = refreshToken.user;
+      const { uuid, token } = await RefreshToken.create({ token: strategies.generateRefreshToken(user), user_id: user.uuid });
+      res.cookie('refreshToken', { uuid, token }, strategies.COOKIE_OPTIONS);
+      const result = { token: strategies.generateAccessToken(user) };
+      if (withUser) result.user = user.getPublicAttributes();
+      res.json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send(error.message || 'An error occurred while generating a new token');
+    }
+  };
+
+router.post('/refresh-token', refreshToken());
+
+router.post('/auto-sign-in', refreshToken(true));
+
+router.post('/sign-out', async (req, res) => {
+  if (req.signedCookies?.refreshToken) {
     const refreshToken = await RefreshToken.findByPk(req.signedCookies.refreshToken.uuid);
-    if (!refreshToken) return res.status(400).json({ message: 'No refresh token' });
-    await refreshToken.destroy();
-    if (req.signedCookies.refreshToken.token !== refreshToken.token) return res.status(400).json({ message: 'Bad token' });
-    // const payload = strategies.verifyRefreshToken(token);
-    const { uuid, token } = await RefreshToken.create({ token: strategies.generateRefreshToken({ uuid: refreshToken.user_id }), user_id: refreshToken.user_id });
-    res.cookie('refreshToken', { uuid, token }, strategies.COOKIE_OPTIONS);
-    res.end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(error.message || 'An error occurred while generating a new token');
+    if (refreshToken) await refreshToken.destroy();
   }
+  res.clearCookie('refreshToken');
+  res.end();
 });
 
 const UserUpdateSchema = yup.object({ body: yup.object({ username: USERNAME, name: NAME }) });
