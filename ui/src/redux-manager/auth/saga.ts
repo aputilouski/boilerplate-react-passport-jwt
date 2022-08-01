@@ -23,17 +23,31 @@ function* signInWorker(action: StoreActionPromise<SignInCredentials>) {
   }
 }
 
+function* autoSignInWorker() {
+  try {
+    yield put(authSlice.actions.setPendingAuth(true));
+    const response: Awaited<ReturnType<typeof api.autoSignIn>> = yield call(api.autoSignIn);
+    yield call(setAccessToken, response.data.token);
+    yield put(authSlice.actions.signIn(response.data));
+    yield put(replace('/main'));
+  } catch (error) {
+    console.error(error);
+    yield put(authSlice.actions.setPendingAuth(false));
+    localStorage.removeItem('authorized');
+  }
+}
+
 function* signOutWorker(action: StoreActionPromise) {
   const { resolve, reject } = action;
   try {
     yield call(api.signOut);
     yield put(authSlice.actions.signOut());
-    localStorage.removeItem('authorized');
     resolve();
   } catch (error) {
     console.error(error);
     reject();
   }
+  localStorage.removeItem('authorized');
 }
 
 function* signUpWorker(action: StoreActionPromise<SignUpCredentials>) {
@@ -70,15 +84,19 @@ function* refreshTokenWatcher() {
 }
 
 export default function* authWatcher() {
+  let autoAuthorized = false;
+  if (localStorage.getItem('authorized')) {
+    yield call(autoSignInWorker);
+    autoAuthorized = true;
+  }
+
   yield takeEvery(SIGN_UP, signUpWorker);
 
   while (true) {
-    // if (localStorage.getItem('authorized')) {
-    // } else {
-    // }
-
-    const signInAction: StoreActionPromise<SignInCredentials> = yield take(SIGN_IN);
-    yield call(signInWorker, signInAction);
+    if (!autoAuthorized) {
+      const signInAction: StoreActionPromise<SignInCredentials> = yield take(SIGN_IN);
+      yield call(signInWorker, signInAction);
+    } else autoAuthorized = false;
 
     const updateUserTask: Task = yield takeEvery(USER_UPDATE, userUpdateWorker);
     const refreshTokenTask: Task = yield fork(refreshTokenWatcher);

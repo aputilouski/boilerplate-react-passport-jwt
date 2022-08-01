@@ -26,6 +26,7 @@ const endpoints = {
   signOut: '/auth/sign-out',
   updateUser: '/auth/user',
   refreshToken: '/auth/refresh-token',
+  autoSignIn: '/auth/auto-sign-in',
 };
 
 const api = {
@@ -34,6 +35,7 @@ const api = {
   signOut: () => axios.post(endpoints.signOut),
   updateUser: (data: UserData) => axios.post<{ user: User }>(endpoints.updateUser, data),
   refreshToken: () => axios.post<{ token: string }>(endpoints.refreshToken),
+  autoSignIn: () => axios.post<{ token: string; user: User }>(endpoints.autoSignIn),
 };
 
 export type ApiError = AxiosError<{ message?: string }>;

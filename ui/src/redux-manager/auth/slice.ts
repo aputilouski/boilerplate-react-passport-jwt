@@ -5,7 +5,7 @@ export type AuthSlice = {
   token: string | null;
   user: User | null;
   authorized: boolean;
-  // pendingAutoSignIn: boolean;
+  pendingAuth: boolean;
 };
 
 export default createSlice({
@@ -14,7 +14,7 @@ export default createSlice({
     token: null,
     user: null,
     authorized: false,
-    // pendingAutoSignIn: false
+    pendingAuth: false,
   } as AuthSlice,
   reducers: {
     signIn: (state, action: StoreAction<{ token: string; user: User }>) => {
@@ -22,6 +22,7 @@ export default createSlice({
       state.user = user;
       state.token = token;
       state.authorized = true;
+      state.pendingAuth = false;
     },
     signOut: state => {
       state.token = null;
@@ -33,6 +34,9 @@ export default createSlice({
     },
     updateToken: (state, action: StoreAction<string>) => {
       state.token = action.payload;
+    },
+    setPendingAuth: (state, action: StoreAction<boolean>) => {
+      state.pendingAuth = action.payload;
     },
   },
 });
