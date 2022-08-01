@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom';
 import { SignUpCredentials, signUp } from 'redux-manager';
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
-import * as Yup from 'yup';
+import { scheme } from 'utils';
 
 type InitialValues = SignUpCredentials & { error: string };
 
 const SignUp = () => {
   const onSubmit = (values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
     const { username, name, password, confirmPassword } = values;
-    console.log(values);
     signUp({ username, name, password, confirmPassword })
       .catch((error: string) => setErrors({ error }))
       .finally(() => setSubmitting(false));
@@ -18,13 +17,11 @@ const SignUp = () => {
     <div className="w-screen h-screen flex">
       <Formik //
         initialValues={{ username: '', name: '', password: '', confirmPassword: '', error: '' }}
-        validationSchema={Yup.object({
-          name: Yup.string().min(4, 'Must be 4 characters or more').max(40, 'Must be 40 characters or less').required('Required'),
-          username: Yup.string().min(4, 'Must be 4 characters or more').max(20, 'Must be 20 characters or less').required('Required'),
-          password: Yup.string().min(8, 'Must be 8 characters or more').max(20, 'Must be 20 characters or less').required('Required'),
-          confirmPassword: Yup.string()
-            .oneOf([Yup.ref('password')], 'Passwords must match')
-            .required('Required'),
+        validationSchema={scheme.object({
+          name: scheme.name,
+          username: scheme.username,
+          password: scheme.password,
+          confirmPassword: scheme.confirmPassword,
         })}
         onSubmit={onSubmit}>
         {({ isSubmitting }) => (

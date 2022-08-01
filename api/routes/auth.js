@@ -4,6 +4,7 @@ const yup = require('yup');
 const { validate } = require('../utils');
 const { User, RefreshToken } = require('../models');
 const { strategies } = require('../config');
+const { Op } = require('sequelize');
 
 const USERNAME = yup.string().min(4, 'Must be 4 characters or more').max(20, 'Must be 20 characters or less').required('Required');
 const PASSWORD = yup.string().min(8, 'Must be 8 characters or more').max(20, 'Must be 20 characters or less').required('Required');
@@ -46,7 +47,7 @@ router.post('/sign-in', validate(SignInSchema), async (req, res) => {
       const { uuid, token } = req.signedCookies?.refreshToken;
       const index = tokens.findIndex(token => token.uuid === uuid);
       const currentRefreshToken = tokens[index];
-      if (currentRefreshToken) {
+      if (currentRefreshToken?.token === token) {
         await currentRefreshToken.destroy();
         tokens.splice(index, 1);
       } else res.clearCookie('refreshToken');
@@ -104,7 +105,7 @@ router.post('/sign-out', async (req, res) => {
 
 const UserUpdateSchema = yup.object({ body: yup.object({ username: USERNAME, name: NAME }) });
 
-router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
+router.post('/update-user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
   try {
     const { name, username } = req.body;
 
@@ -121,6 +122,28 @@ router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (r
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message || 'Some error occurred while updating the user');
+  }
+});
+
+const PasswordUpdateSchema = yup.object({ body: yup.object({ currentPassword: PASSWORD, password: PASSWORD }) });
+
+router.post('/update-password', strategies.verifyUser, validate(PasswordUpdateSchema), async (req, res) => {
+  try {
+    const { currentPassword, password } = req.body;
+
+    const isEqual = await req.user.confirmPassword(currentPassword);
+    if (!isEqual) return res.status(403).json({ message: 'Current password is not confirmed' });
+
+    req.user.password = await User.encryptPassword(password);
+    await req.user.save();
+
+    if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
+    await RefreshToken.destroy({ where: { uuid: { [Op.not]: req.signedCookies.refreshToken.uuid } } });
+
+    res.json({ message: 'Password was updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message || 'Some error occurred while updating the password');
   }
 });
 

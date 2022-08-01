@@ -13,3 +13,7 @@ export const signUp = (payload: SignUpCredentials) => new Promise((resolve, reje
 export const USER_UPDATE = 'AUTH/USER_UPDATE';
 export type UserData = Omit<User, 'uuid'>;
 export const updateUser = (payload: UserData) => new Promise((resolve, reject) => store.dispatch({ type: USER_UPDATE, payload, resolve, reject }));
+
+export const PASSWORD_UPDATE = 'AUTH/PASSWORD_UPDATE';
+export type UpdatePasswordArgs = { currentPassword: string; password: string; confirmPassword: string };
+export const updatePassword = (payload: {}) => new Promise((resolve, reject) => store.dispatch({ type: PASSWORD_UPDATE, payload, resolve, reject }));

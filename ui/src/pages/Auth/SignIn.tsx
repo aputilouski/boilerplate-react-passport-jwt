@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { SignInCredentials, signIn } from 'redux-manager';
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
-import * as Yup from 'yup';
+import { scheme } from 'utils';
 
 type InitialValues = SignInCredentials & { error: string };
 
@@ -17,10 +17,7 @@ const SignIn = () => {
     <div className="w-screen h-screen flex">
       <Formik //
         initialValues={{ username: '', password: '', error: '' }}
-        validationSchema={Yup.object({
-          username: Yup.string().min(4, 'Must be 4 characters or more').max(20, 'Must be 20 characters or less').required('Required'),
-          password: Yup.string().min(8, 'Must be 8 characters or more').max(20, 'Must be 20 characters or less').required('Required'),
-        })}
+        validationSchema={scheme.object({ username: scheme.username, password: scheme.password })}
         onSubmit={onSubmit}>
         {({ isSubmitting }) => (
           <Form className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">

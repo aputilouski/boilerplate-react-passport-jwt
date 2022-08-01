@@ -2,7 +2,7 @@ import { call, put, take, takeEvery, delay, fork, cancel } from 'redux-saga/effe
 import { Task } from 'redux-saga';
 import authSlice from './slice';
 import api, { getErrorMessage, setAccessToken } from 'api';
-import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials, USER_UPDATE } from './actions';
+import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials, USER_UPDATE, PASSWORD_UPDATE, UpdatePasswordArgs } from './actions';
 import { StoreActionPromise } from '../store';
 import { replace } from 'connected-react-router';
 
@@ -62,7 +62,7 @@ function* signUpWorker(action: StoreActionPromise<SignUpCredentials>) {
   }
 }
 
-function* userUpdateWorker(action: StoreActionPromise<User>) {
+function* updateUserWorker(action: StoreActionPromise<User>) {
   const { payload, resolve, reject } = action;
   try {
     const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(payload));
@@ -83,6 +83,17 @@ function* refreshTokenWatcher() {
   }
 }
 
+function* updatePasswordWatcher(action: StoreActionPromise<UpdatePasswordArgs>) {
+  const { payload, resolve, reject } = action;
+  try {
+    yield call(() => api.updatePassword(payload));
+    resolve();
+  } catch (error) {
+    console.error(error);
+    reject(getErrorMessage(error));
+  }
+}
+
 export default function* authWatcher() {
   let autoAuthorized = false;
   if (localStorage.getItem('authorized')) {
@@ -98,12 +109,13 @@ export default function* authWatcher() {
       yield call(signInWorker, signInAction);
     } else autoAuthorized = false;
 
-    const updateUserTask: Task = yield takeEvery(USER_UPDATE, userUpdateWorker);
+    const updateUserTask: Task = yield takeEvery(USER_UPDATE, updateUserWorker);
+    const updatePasswordTask: Task = yield takeEvery(PASSWORD_UPDATE, updatePasswordWatcher);
     const refreshTokenTask: Task = yield fork(refreshTokenWatcher);
 
     const signOutAction: StoreActionPromise = yield take(SIGN_OUT);
 
-    yield cancel([updateUserTask, refreshTokenTask]);
+    yield cancel([updateUserTask, updatePasswordTask, refreshTokenTask]);
     yield call(signOutWorker, signOutAction);
   }
 }
