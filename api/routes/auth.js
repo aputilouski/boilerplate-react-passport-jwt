@@ -72,12 +72,12 @@ const refreshToken =
   (withUser = false) =>
   async (req, res) => {
     try {
-      if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
+      if (!req.signedCookies?.refreshToken) return res.status(401).json({ message: 'No refresh token' });
       const refreshToken = await RefreshToken.findByPk(req.signedCookies.refreshToken.uuid, { include: { model: User, as: 'user' } });
-      if (!refreshToken) return res.status(400).json({ message: 'No refresh token' });
+      if (!refreshToken) return res.status(401).json({ message: 'No refresh token' });
       await refreshToken.destroy();
       const payload = strategies.verifyRefreshToken(req.signedCookies.refreshToken.token);
-      if (req.signedCookies.refreshToken.token !== refreshToken.token || payload.user_id !== refreshToken.user.uuid) return res.status(400).json({ message: 'Bad token' });
+      if (req.signedCookies.refreshToken.token !== refreshToken.token || payload.user_id !== refreshToken.user.uuid) return res.status(401).json({ message: 'Bad token' });
       const user = refreshToken.user;
       const { uuid, token } = await RefreshToken.create({ token: strategies.generateRefreshToken(user), user_id: user.uuid });
       res.cookie('refreshToken', { uuid, token }, strategies.COOKIE_OPTIONS);
