@@ -1,46 +1,60 @@
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
-import { useStore, updateUser, UserData } from 'redux-manager';
+import React from 'react';
+import { useFormik } from 'formik';
+import { ErrorMessage } from 'components';
+import { useStore, updateUser, USER_UPDATE } from 'redux-manager';
 import UpdatePassword from './UpdatePassword';
 import { scheme } from 'utils';
 
 const Profile = () => {
-  const user = useStore(state => state.auth.user);
-  const onSubmit = (values: UserData, { setSubmitting }: FormikHelpers<UserData>) => {
-    updateUser(values).finally(() => setSubmitting(false));
-  };
+  const { loading, errorMessage, user } = useStore(s => s.auth);
+
+  const formik = useFormik({
+    initialValues: { username: user?.username || '', name: user?.name || '' },
+    validationSchema: scheme.object({ username: scheme.username, name: scheme.name }),
+    onSubmit: updateUser,
+  });
+
+  const setSubmitting = formik.setSubmitting;
+  React.useEffect(() => {
+    if (!loading) setSubmitting(false);
+  }, [loading, setSubmitting]);
+
   if (!user) return null;
   return (
     <>
-      <Formik //
-        initialValues={{ username: user.username, name: user.name }}
-        validationSchema={scheme.object({ username: scheme.username, name: scheme.name })}
-        onSubmit={onSubmit}>
-        {({ isSubmitting }) => (
-          <Form className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
-            <h1 className="text-2xl mb-1.5">Profile</h1>
+      <form //
+        onSubmit={formik.handleSubmit}
+        className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
+        <h1 className="text-2xl mb-1.5">Profile</h1>
 
-            <Field //
-              name="username"
-              placeholder="Username"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="username" component="div" className="text-sm" />
+        <input //
+          name="username"
+          placeholder="Username"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.username}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.username}</ErrorMessage>
 
-            <Field //
-              name="name"
-              placeholder="Name"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="name" component="div" className="text-sm" />
+        <input //
+          name="name"
+          placeholder="Name"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.name}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.name}</ErrorMessage>
 
-            <button type="submit" disabled={isSubmitting}>
-              Save
-            </button>
-          </Form>
-        )}
-      </Formik>
+        <ErrorMessage>{errorMessage[USER_UPDATE]}</ErrorMessage>
+
+        <button type="submit" disabled={formik.isSubmitting}>
+          Save
+        </button>
+      </form>
 
       <UpdatePassword />
     </>

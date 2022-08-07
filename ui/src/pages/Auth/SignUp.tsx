@@ -1,79 +1,95 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { SignUpCredentials, signUp } from 'redux-manager';
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
+import { signUp, useStore, SIGN_UP } from 'redux-manager';
+import { useFormik } from 'formik';
+import { ErrorMessage } from 'components';
 import { scheme } from 'utils';
-
-type InitialValues = SignUpCredentials & { error: string };
+import clsx from 'clsx';
 
 const SignUp = () => {
-  const onSubmit = (values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
-    const { username, name, password, confirmPassword } = values;
-    signUp({ username, name, password, confirmPassword })
-      .catch((error: string) => setErrors({ error }))
-      .finally(() => setSubmitting(false));
-  };
+  const formik = useFormik({
+    initialValues: { username: '', name: '', password: '', confirmPassword: '' },
+    validationSchema: scheme.object({
+      name: scheme.name,
+      username: scheme.username,
+      password: scheme.password,
+      confirmPassword: scheme.confirmPassword,
+    }),
+    onSubmit: signUp,
+  });
+
+  const { loading, errorMessage } = useStore(s => s.auth);
+
+  const setSubmitting = formik.setSubmitting;
+  React.useEffect(() => {
+    if (!loading) setSubmitting(false);
+  }, [loading, setSubmitting]);
 
   return (
     <div className="w-screen h-screen flex">
-      <Formik //
-        initialValues={{ username: '', name: '', password: '', confirmPassword: '', error: '' }}
-        validationSchema={scheme.object({
-          name: scheme.name,
-          username: scheme.username,
-          password: scheme.password,
-          confirmPassword: scheme.confirmPassword,
-        })}
-        onSubmit={onSubmit}>
-        {({ isSubmitting }) => (
-          <Form className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
-            <h1 className="text-2xl mb-1.5">Sign Up</h1>
+      <form //
+        onSubmit={formik.handleSubmit}
+        className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
+        <h1 className="text-2xl mb-1.5">Sign Up</h1>
 
-            <Field //
-              name="username"
-              placeholder="Username"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="username" component="div" className="text-sm" />
+        <input //
+          name="username"
+          placeholder="Username"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.username}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.username}</ErrorMessage>
 
-            <Field //
-              name="name"
-              placeholder="Name"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="name" component="div" className="text-sm" />
+        <input //
+          name="name"
+          placeholder="Name"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.name}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.name}</ErrorMessage>
 
-            <Field //
-              name="password"
-              placeholder="Password"
-              type="password"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="password" component="div" className="text-sm" />
+        <input //
+          name="password"
+          placeholder="Password"
+          type="password"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.password}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.password}</ErrorMessage>
 
-            <Field //
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              type="password"
-              className="border"
-              autoComplete="off"
-            />
-            <ErrorMessage name="confirmPassword" component="div" className="text-sm" />
+        <input //
+          name="confirmPassword"
+          placeholder="Confirm Password"
+          type="password"
+          className="border"
+          autoComplete="off"
+          onChange={formik.handleChange}
+          value={formik.values.confirmPassword}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.errors.confirmPassword}</ErrorMessage>
 
-            <ErrorMessage name="error" component="div" className="text-sm" />
+        <ErrorMessage>{errorMessage[SIGN_UP]}</ErrorMessage>
 
-            <button type="submit" disabled={isSubmitting}>
-              Sign Up
-            </button>
+        <button type="submit" disabled={formik.isSubmitting}>
+          Sign Up
+        </button>
 
-            <div className="text-center">
-              <Link to="/">Sign In</Link>
-            </div>
-          </Form>
-        )}
-      </Formik>
+        <div className={clsx('text-center', formik.isSubmitting && 'pointer-events-none ')}>
+          <Link to="/" replace>
+            Sign In
+          </Link>
+        </div>
+      </form>
     </div>
   );
 };

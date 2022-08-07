@@ -105,7 +105,7 @@ router.post('/sign-out', async (req, res) => {
 
 const UserUpdateSchema = yup.object({ body: yup.object({ username: USERNAME, name: NAME }) });
 
-router.post('/update-user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
+router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
   try {
     const { name, username } = req.body;
 
@@ -123,6 +123,10 @@ router.post('/update-user', strategies.verifyUser, validate(UserUpdateSchema), a
     console.error(error);
     res.status(500).send(error.message || 'Some error occurred while updating the user');
   }
+});
+
+router.get('/user', strategies.verifyUser, async (req, res) => {
+  res.json({ user: req.user.getPublicAttributes() });
 });
 
 const PasswordUpdateSchema = yup.object({ body: yup.object({ currentPassword: PASSWORD, password: PASSWORD }) });

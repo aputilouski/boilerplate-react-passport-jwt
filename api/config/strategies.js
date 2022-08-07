@@ -23,10 +23,10 @@ module.exports.useJwtStrategy = () => {
   );
 };
 
-module.exports.generateAccessToken = user =>
-  jwt.sign({ user_id: user.uuid }, env.jwt_secret, {
-    expiresIn: eval(env.session_expiry),
-  });
+module.exports.generateAccessToken = user => {
+  const token = jwt.sign({ user_id: user.uuid }, env.jwt_secret, { expiresIn: eval(env.session_expiry) });
+  return `Bearer ${token}`;
+};
 
 module.exports.generateRefreshToken = user =>
   jwt.sign({ user_id: user.uuid }, env.refresh_token_secret, {

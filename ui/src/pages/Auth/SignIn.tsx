@@ -1,57 +1,67 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { SignInCredentials, signIn } from 'redux-manager';
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
+import { signIn, useStore, SIGN_IN } from 'redux-manager';
+import { useFormik } from 'formik';
+import { ErrorMessage } from 'components';
 import { scheme } from 'utils';
-
-type InitialValues = SignInCredentials & { error: string };
+import clsx from 'clsx';
 
 const SignIn = () => {
-  const onSubmit = (values: InitialValues, { setSubmitting, setErrors }: FormikHelpers<InitialValues>) => {
-    const { username, password } = values;
-    signIn({ username, password })
-      .catch((error: string) => setErrors({ error }))
-      .finally(() => setSubmitting(false));
-  };
+  const formik = useFormik({
+    initialValues: { username: '', password: '' },
+    validationSchema: scheme.object({ username: scheme.username, password: scheme.password }),
+    onSubmit: signIn,
+  });
+
+  const { loading, errorMessage } = useStore(s => s.auth);
+
+  const setSubmitting = formik.setSubmitting;
+  React.useEffect(() => {
+    if (!loading) setSubmitting(false);
+  }, [loading, setSubmitting]);
 
   return (
     <div className="w-screen h-screen flex">
-      <Formik //
-        initialValues={{ username: '', password: '', error: '' }}
-        validationSchema={scheme.object({ username: scheme.username, password: scheme.password })}
-        onSubmit={onSubmit}>
-        {({ isSubmitting }) => (
-          <Form className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
-            <h1 className="text-2xl mb-1.5">Sign In</h1>
+      <form //
+        onSubmit={formik.handleSubmit}
+        className="max-w-sm w-full m-auto flex flex-col gap-3.5 p-4">
+        <h1 className="text-2xl mb-1.5">Sign In</h1>
 
-            <Field //
-              name="username"
-              placeholder="Username"
-              className="border"
-              autoComplete="username"
-            />
-            <ErrorMessage name="username" component="div" className="text-sm" />
+        <input //
+          name="username"
+          placeholder="Username"
+          className="border"
+          autoComplete="username"
+          onChange={formik.handleChange}
+          value={formik.values.username}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.touched.username ? formik.errors.username : undefined}</ErrorMessage>
 
-            <Field //
-              name="password"
-              placeholder="Password"
-              type="password"
-              className="border"
-              autoComplete="current-password"
-            />
-            <ErrorMessage name="password" component="div" className="text-sm" />
+        <input //
+          name="password"
+          placeholder="Password"
+          type="password"
+          className="border"
+          autoComplete="current-password"
+          onChange={formik.handleChange}
+          value={formik.values.password}
+          onBlur={formik.handleBlur}
+        />
+        <ErrorMessage>{formik.touched.password ? formik.errors.password : undefined}</ErrorMessage>
 
-            <ErrorMessage name="error" component="div" className="text-sm" />
+        <ErrorMessage>{errorMessage[SIGN_IN]}</ErrorMessage>
 
-            <button type="submit" disabled={isSubmitting}>
-              Sign In
-            </button>
+        <button type="submit" disabled={formik.isSubmitting}>
+          Sign In
+        </button>
 
-            <div className="text-center">
-              <Link to="/sign-up">Sign Up</Link>
-            </div>
-          </Form>
-        )}
-      </Formik>
+        <div className={clsx('text-center', formik.isSubmitting && 'pointer-events-none ')}>
+          <Link to="/sign-up" replace>
+            Sign Up
+          </Link>
+        </div>
+      </form>
     </div>
   );
 };

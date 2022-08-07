@@ -19,7 +19,7 @@
 
 ---
 
-### Important! Create `.env.local` file for development and `.env` for production
+### Important! Create `.env.local` file for development and `.env` for production at the root of the project.
 
 ---
 
