@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { StoreAction } from '../store';
+import { Action } from '../store';
 import { SIGN_IN, SIGN_UP, USER_UPDATE, PASSWORD_UPDATE } from './actions';
 
 const errorKeys = [SIGN_IN, SIGN_UP, USER_UPDATE, PASSWORD_UPDATE] as const;
@@ -16,7 +16,6 @@ export type AuthSlice = {
 export default createSlice({
   name: 'auth',
   initialState: {
-    token: null,
     user: null,
     authorized: false,
     pendingAuth: false,
@@ -24,7 +23,7 @@ export default createSlice({
     errorMessage: {},
   } as AuthSlice,
   reducers: {
-    signIn: (state, action: StoreAction<{ user: User }>) => {
+    signIn: (state, action: Action<{ user: User }>) => {
       const { user } = action.payload;
       state.user = user;
       state.authorized = true;
@@ -34,16 +33,16 @@ export default createSlice({
       state.user = null;
       state.authorized = false;
     },
-    setUser: (state, action: StoreAction<User>) => {
+    setUser: (state, action: Action<User>) => {
       state.user = action.payload;
     },
-    setPendingAuth: (state, action: StoreAction<boolean>) => {
+    setPendingAuth: (state, action: Action<boolean>) => {
       state.pendingAuth = action.payload;
     },
-    setLoading: (state, action: StoreAction<boolean>) => {
+    setLoading: (state, action: Action<boolean>) => {
       state.loading = action.payload;
     },
-    setErrorMessage: (state, action: StoreAction<ErrorKeys>) => {
+    setErrorMessage: (state, action: Action<ErrorKeys>) => {
       state.errorMessage = action.payload;
     },
   },

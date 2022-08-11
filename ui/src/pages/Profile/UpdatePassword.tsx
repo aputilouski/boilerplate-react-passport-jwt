@@ -24,7 +24,7 @@ const UpdatePassword = () => {
       setSubmitting(false);
       resetForm();
     }
-  }, [loading, setSubmitting]);
+  }, [loading, setSubmitting, resetForm]);
 
   return (
     <form //
