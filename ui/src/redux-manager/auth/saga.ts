@@ -99,9 +99,9 @@ function* autoSignInWorker() {
     }
     yield put(replace('/main'));
   } catch (error) {
+    console.error(error);
     yield put(authSlice.actions.setPendingAuth(false));
     yield call([localStorage, localStorage.removeItem], 'authorized');
-    throw error;
   }
 }
 
@@ -109,7 +109,6 @@ function* signOutWorker(bc: BroadcastChannel) {
   try {
     yield put(authSlice.actions.setPendingAuth(true));
     yield call(api.signOut);
-    yield call([bc, bc.postMessage], { type: SIGN_OUT });
   } catch (error) {
     throw error;
   } finally {
@@ -117,6 +116,7 @@ function* signOutWorker(bc: BroadcastChannel) {
     yield put(authSlice.actions.signOut());
     yield call([localStorage, localStorage.removeItem], 'authorized');
     yield call(dropAccessToken);
+    yield call([bc, bc.postMessage], { type: SIGN_OUT });
   }
 }
 
@@ -178,40 +178,32 @@ function* updatePasswordWorker(action: Action<UpdatePasswordArgs>) {
   }
 }
 
-function* authWather() {
-  const bc: BroadcastChannel = yield call(() => new BroadcastChannel('auth'));
-  yield fork(syncAccessTokenWorker, bc);
+function* authWather(bc: BroadcastChannel) {
+  const signInAction: Action<SignInCredentials> = yield take([SIGN_IN, authSlice.actions.signIn.toString()]);
+  if (signInAction.type === SIGN_IN) yield call(signInWorker, signInAction, bc);
 
-  let autoAuthorized = false;
-  const result: boolean = yield call([localStorage, localStorage.getItem], 'authorized');
-  if (result) {
-    yield call(autoSignInWorker);
-    autoAuthorized = true;
-  }
+  const updateUserTask: Task = yield takeEvery(USER_UPDATE, updateUserWorker, bc);
+  const updatePasswordTask: Task = yield takeEvery(PASSWORD_UPDATE, updatePasswordWorker);
+  const refreshTokenTask: Task = yield fork(refreshTokenWorker);
 
-  yield takeEvery(SIGN_UP, signUpWorker);
+  const signOutAction: Action = yield take([SIGN_OUT, authSlice.actions.signOut.toString()]);
 
-  while (true) {
-    if (!autoAuthorized) {
-      const signInAction: Action<SignInCredentials> = yield take([SIGN_IN, authSlice.actions.signIn.toString()]);
-      if (signInAction.type === SIGN_IN) yield call(signInWorker, signInAction, bc);
-    } else autoAuthorized = false;
-
-    const updateUserTask: Task = yield takeEvery(USER_UPDATE, updateUserWorker, bc);
-    const updatePasswordTask: Task = yield takeEvery(PASSWORD_UPDATE, updatePasswordWorker);
-    const refreshTokenTask: Task = yield fork(refreshTokenWorker);
-
-    const signOutAction: Action = yield take([SIGN_OUT, authSlice.actions.signOut.toString()]);
-
-    yield cancel([updateUserTask, updatePasswordTask, refreshTokenTask]);
-    if (signOutAction.type === SIGN_OUT) yield call(signOutWorker, bc);
-  }
+  yield cancel([updateUserTask, updatePasswordTask, refreshTokenTask]);
+  if (signOutAction.type === SIGN_OUT) yield call(signOutWorker, bc);
 }
 
 export default function* main() {
+  yield takeEvery(SIGN_UP, signUpWorker);
+
+  const bc: BroadcastChannel = yield call(() => new BroadcastChannel('auth'));
+  yield fork(syncAccessTokenWorker, bc);
+
+  const result: boolean = yield call([localStorage, localStorage.getItem], 'authorized');
+  if (result) yield fork(autoSignInWorker);
+
   while (true) {
     try {
-      yield call(authWather);
+      yield call(authWather, bc);
     } catch (error) {
       console.error(error);
     }
