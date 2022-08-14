@@ -1,11 +1,11 @@
+require('./register-module-aliases');
+
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-require('./models');
-
-const { strategies, env } = require('./config');
+const { strategies, env } = require('@config');
 strategies.useJwtStrategy();
 
 const indexRouter = require('./routes/index');

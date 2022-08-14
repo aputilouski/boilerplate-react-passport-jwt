@@ -3,7 +3,7 @@ const JwtStrategy = require('passport-jwt').Strategy,
   ExtractJwt = require('passport-jwt').ExtractJwt;
 const jwt = require('jsonwebtoken');
 const env = require('./env');
-const { User } = require('../models');
+const { User } = require('@models');
 
 const options = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -42,5 +42,3 @@ module.exports.COOKIE_OPTIONS = {
   maxAge: eval(env.refresh_token_expiry) * 1000,
   // sameSite: 'none',
 };
-
-module.exports.verifyUser = passport.authenticate('jwt', { session: false });

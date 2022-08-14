@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const yup = require('yup');
-const { validate } = require('../utils');
-const { User, RefreshToken } = require('../models');
-const { strategies } = require('../config');
+const { validate, verifyUser } = require('@middleware');
+const { User, RefreshToken } = require('@models');
+const { strategies } = require('@config');
 const { Op } = require('sequelize');
 
 const USERNAME = yup.string().min(4, 'Must be 4 characters or more').max(20, 'Must be 20 characters or less').required('Required');
@@ -105,7 +105,7 @@ router.post('/sign-out', async (req, res) => {
 
 const UserUpdateSchema = yup.object({ body: yup.object({ username: USERNAME, name: NAME }) });
 
-router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (req, res) => {
+router.post('/user', verifyUser, validate(UserUpdateSchema), async (req, res) => {
   try {
     const { name, username } = req.body;
 
@@ -125,13 +125,13 @@ router.post('/user', strategies.verifyUser, validate(UserUpdateSchema), async (r
   }
 });
 
-router.get('/user', strategies.verifyUser, async (req, res) => {
+router.get('/user', verifyUser, async (req, res) => {
   res.json({ user: req.user.getPublicAttributes() });
 });
 
 const PasswordUpdateSchema = yup.object({ body: yup.object({ currentPassword: PASSWORD, password: PASSWORD }) });
 
-router.post('/update-password', strategies.verifyUser, validate(PasswordUpdateSchema), async (req, res) => {
+router.post('/update-password', verifyUser, validate(PasswordUpdateSchema), async (req, res) => {
   try {
     const { currentPassword, password } = req.body;
 

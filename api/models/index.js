@@ -1,7 +1,7 @@
 require('pg').defaults.parseInt8 = true;
 const debug = require('debug')('api:database');
 const { Sequelize } = require('sequelize');
-const env = require('../config/env');
+const env = require('@config/env');
 
 const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_password, {
   host: env.postgres_host,
