@@ -21,13 +21,13 @@ axios.interceptors.response.use(
 );
 
 const endpoints = {
-  signIn: '/auth/sign-in',
-  signUp: '/auth/sign-up',
-  signOut: '/auth/sign-out',
-  user: '/auth/user',
-  updatePassword: '/auth/update-password',
-  refreshToken: '/auth/refresh-token',
-  autoSignIn: '/auth/auto-sign-in',
+  signIn: '/api/auth/sign-in',
+  signUp: '/api/auth/sign-up',
+  signOut: '/api/auth/sign-out',
+  user: '/api/auth/user',
+  updatePassword: '/api/auth/update-password',
+  refreshToken: '/api/auth/refresh-token',
+  autoSignIn: '/api/auth/auto-sign-in',
 };
 
 const api = {

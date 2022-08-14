@@ -20,6 +20,6 @@ app.use(cookieParser(env.cookie_secret));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 
 module.exports = app;

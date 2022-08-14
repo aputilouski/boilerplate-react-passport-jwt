@@ -36,9 +36,10 @@ module.exports.generateRefreshToken = user =>
 module.exports.verifyRefreshToken = token => jwt.verify(token, env.refresh_token_secret);
 
 module.exports.COOKIE_OPTIONS = {
+  path: '/api',
   httpOnly: true,
   secure: env.is_production,
   signed: true,
   maxAge: eval(env.refresh_token_expiry) * 1000,
-  // sameSite: 'none',
+  sameSite: 'strict',
 };
