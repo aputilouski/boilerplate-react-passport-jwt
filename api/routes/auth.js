@@ -47,10 +47,10 @@ router.post('/sign-in', validate(SignInSchema), async (req, res) => {
       const { uuid, token } = req.signedCookies?.refreshToken;
       const index = tokens.findIndex(token => token.uuid === uuid);
       const currentRefreshToken = tokens[index];
-      if (currentRefreshToken?.token === token) {
+      if (currentRefreshToken && currentRefreshToken.token === token) {
         await currentRefreshToken.destroy();
         tokens.splice(index, 1);
-      } else res.clearCookie('refreshToken');
+      }
     }
 
     if (tokens.length > 4) {
@@ -135,13 +135,14 @@ router.post('/update-password', verifyUser, validate(PasswordUpdateSchema), asyn
   try {
     const { currentPassword, password } = req.body;
 
+    if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
+
     const isEqual = await req.user.confirmPassword(currentPassword);
     if (!isEqual) return res.status(403).json({ message: 'Current password is not confirmed' });
 
     req.user.password = await User.encryptPassword(password);
     await req.user.save();
 
-    if (!req.signedCookies?.refreshToken) return res.status(400).json({ message: 'No refresh token' });
     await RefreshToken.destroy({ where: { uuid: { [Op.not]: req.signedCookies.refreshToken.uuid } } });
 
     res.json({ message: 'Password was updated successfully' });

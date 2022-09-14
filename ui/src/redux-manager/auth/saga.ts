@@ -1,9 +1,9 @@
-import { call, put, take, takeEvery, delay, fork, cancel, retry, cancelled } from 'redux-saga/effects';
+import { call, put, take, takeEvery, delay, fork, cancel, retry, cancelled, select } from 'redux-saga/effects';
 import { Task, EventChannel, eventChannel } from 'redux-saga';
 import authSlice from './slice';
 import api, { getErrorMessage, setAccessToken, getAccessToken, dropAccessToken } from 'api';
 import { SIGN_IN, SignInCredentials, SIGN_OUT, SIGN_UP, SignUpCredentials, USER_UPDATE, PASSWORD_UPDATE, UpdatePasswordArgs, signOut, SYNC_ACCESS_TOKEN } from './actions';
-import { Action } from '../store';
+import { Action, RootState } from '../store';
 import { replace } from 'connected-react-router';
 
 const REFRESH_TOKEN_TIMEOUT = (eval(process.env.REACT_APP_REFRESH_TOKEN_TIMEOUT as string) || 60 * 5) * 1000;
@@ -87,17 +87,23 @@ function* autoSignInWorker() {
   try {
     yield put(authSlice.actions.setPendingAuth(true));
     const result: ReturnType<typeof getAccessToken> = yield call(getAccessToken);
+
+    // if you run this line below, then pathname will always be '/' (explanation in AuthController)
+    const pathname: string = yield select((state: RootState) => state.router.location.pathname);
+
     if (result) {
+      // get only user data
       yield call(setAccessToken, result);
       const response: Awaited<ReturnType<typeof api.getUser>> = yield call(api.getUser);
       yield put(authSlice.actions.signIn({ user: response.data.user }));
     } else {
+      // get token and user data
       const response: Awaited<ReturnType<typeof api.autoSignIn>> = yield call(api.autoSignIn);
       yield call([localStorage, localStorage.setItem], 'token_last_refresh', new Date().toISOString());
       yield put({ type: SYNC_ACCESS_TOKEN, payload: response.data.token });
       yield put(authSlice.actions.signIn({ user: response.data.user }));
     }
-    yield put(replace('/main'));
+    yield put(replace(['/', '/sign-up'].includes(pathname) ? '/main' : pathname));
   } catch (error) {
     console.error(error);
     yield put(authSlice.actions.setPendingAuth(false));
@@ -146,6 +152,7 @@ function* refreshTokenWorker() {
       }
     }
   } catch (error) {
+    console.error(error);
     yield call(signOut);
   }
 }
