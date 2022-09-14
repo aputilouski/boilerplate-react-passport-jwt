@@ -1,4 +1,4 @@
-## This application template can be used to create your applications
+## Boilerplate for jwt authorization
 
 ---
 
